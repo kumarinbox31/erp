@@ -17,8 +17,7 @@ function loadEnv($path)
 }
 
 // Load .env file (assuming it's in the same directory as this script)
-$dotenvPath = dirname(__DIR__) . '/htdocs/.env';
-// echo $dotenvPath;exit;
+$dotenvPath = dirname(__DIR__) . '/.env';
 try {
     loadEnv($dotenvPath);
 } catch (Exception $e) {
