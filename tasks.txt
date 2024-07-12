@@ -1,0 +1,14 @@
+03.07.2024
+1. attendance module upload karte hi 
+    sql file run hona chahiye (tbl create hona chahiye) - bug
+2. attendance module me alert ke ajag msg aana chahiye
+
+
+3. add licence system (need to think or discuss) (done)
+4. this project copy in demoerp direcotry and push code on github 
+    after licence code attached
+    then remove existing db on server and add again db 
+    then install new project on server 
+    after complition setup
+
+5. in user panel if we disabled 

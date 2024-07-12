@@ -1,0 +1,4 @@
+1. install 19.0 version from github branch
+2. upload attendance module
+3. run sql code manually in db for attendance module 
+    filename = attendance.sql
