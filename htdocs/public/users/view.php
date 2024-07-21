@@ -443,7 +443,7 @@ if (!getDolUserInt('USER_PUBLIC_HIDE_COMPANY', 0, $object)) {
 		}
 		print '</div>';
 	}
-	print '<table id="dolpaymenttable" summary="Job position offer" class="center">'."\n";
+	print '<table id="dolpaymenttable"  summary="Job position offer" class="center">'."\n";
 
 	// Output payment summary form
 	print '<tr><td class="left">';

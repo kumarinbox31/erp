@@ -1,2 +1,6 @@
 .env
 documents/
+htdocs/conf/conf.php
+htdocs/conf/conf-old.php
+htdocs/conf/conf.php.old
+.htaccess-old
