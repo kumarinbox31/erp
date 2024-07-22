@@ -1640,7 +1640,6 @@ class pdf_test extends ModelePDFFactures
 		$pdf->SetFillColor(248, 248, 248);
 
 		$total_ttc = (isModEnabled("multicurrency") && $object->multicurrency_tx != 1) ? $object->multicurrency_total_ttc : $object->total_ttc;
-
 		$this->atleastoneratenotnull = 0;
 		if (!getDolGlobalString('MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT')) {
 			$tvaisnull = ((!empty($this->tva) && count($this->tva) == 1 && isset($this->tva['0.000']) && is_float($this->tva['0.000'])) ? true : false);
@@ -1898,7 +1897,7 @@ class pdf_test extends ModelePDFFactures
 		if (!empty($object->paye)) {
 			$resteapayer = 0;
 		}
-
+		
 		if (($deja_regle > 0 || $creditnoteamount > 0 || $depositsamount > 0) && !getDolGlobalString('INVOICE_NO_PAYMENT_DETAILS')) {
 			// Already paid + Deposits
 			$index++;
@@ -1932,7 +1931,6 @@ class pdf_test extends ModelePDFFactures
 			 $resteapayer = 0;
 			 }
 			 */
-
 			$index++;
 			$pdf->SetTextColor(0, 0, 60);
 			$pdf->SetFillColor(224, 224, 224);
@@ -1944,10 +1942,17 @@ class pdf_test extends ModelePDFFactures
 			$pdf->SetFont('', '', $default_font_size - 1);
 			$pdf->SetTextColor(0, 0, 0);
 		}
+		
+		$total_amount_in_words = convertNumberToWords($resteapayer);
+		$posy += 13; // Add some space before displaying total in words
+		$pdf->SetXY($col1x, $posy);
+		$pdf->MultiCell($this->page_largeur - $this->marge_droite - $col1x, $tab2_hl, "Total (in words)".': '.ucwords($total_amount_in_words), 0, 'L', 1);
 
 		$index++;
 		return ($tab2_top + ($tab2_hl * $index));
 	}
+
+	
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
 	/**
@@ -2672,4 +2677,126 @@ class pdf_test extends ModelePDFFactures
 			$this->cols = $hookmanager->resArray;
 		}
 	}
+}
+
+function convertNumberToWords($number) {
+	$hyphen      = '-';
+	$conjunction = ' and ';
+	$separator   = ', ';
+	$negative    = 'negative ';
+	$decimal     = ' point ';
+	$dictionary  = array(
+		0                   => 'zero',
+		1                   => 'one',
+		2                   => 'two',
+		3                   => 'three',
+		4                   => 'four',
+		5                   => 'five',
+		6                   => 'six',
+		7                   => 'seven',
+		8                   => 'eight',
+		9                   => 'nine',
+		10                  => 'ten',
+		11                  => 'eleven',
+		12                  => 'twelve',
+		13                  => 'thirteen',
+		14                  => 'fourteen',
+		15                  => 'fifteen',
+		16                  => 'sixteen',
+		17                  => 'seventeen',
+		18                  => 'eighteen',
+		19                  => 'nineteen',
+		20                  => 'twenty',
+		30                  => 'thirty',
+		40                  => 'forty',
+		50                  => 'fifty',
+		60                  => 'sixty',
+		70                  => 'seventy',
+		80                  => 'eighty',
+		90                  => 'ninety',
+		100                 => 'hundred',
+		1000                => 'thousand',
+		100000              => 'lakh',
+		10000000            => 'crore'
+	);
+
+	if (!is_numeric($number)) {
+		return false;
+	}
+
+	if (($number >= 0 && (int) $number < 0) || (int) $number < 0 - PHP_INT_MAX) {
+		// overflow
+		trigger_error(
+			'convertNumberToWords only accepts numbers between -' . PHP_INT_MAX . ' and ' . PHP_INT_MAX,
+			E_USER_WARNING
+		);
+		return false;
+	}
+
+	if ($number < 0) {
+		return $negative . convertNumberToWords(abs($number));
+	}
+
+	$string = $fraction = null;
+
+	if (strpos($number, '.') !== false) {
+		list($number, $fraction) = explode('.', $number);
+	}
+
+	switch (true) {
+		case $number < 21:
+			$string = $dictionary[$number];
+			break;
+		case $number < 100:
+			$tens   = ((int) ($number / 10)) * 10;
+			$units  = $number % 10;
+			$string = $dictionary[$tens];
+			if ($units) {
+				$string .= $hyphen . $dictionary[$units];
+			}
+			break;
+		case $number < 1000:
+			$hundreds  = floor($number / 100);
+			$remainder = $number % 100;
+			$string = $dictionary[$hundreds] . ' ' . $dictionary[100];
+			if ($remainder) {
+				$string .= $conjunction . convertNumberToWords($remainder);
+			}
+			break;
+		case $number < 100000:
+			$thousands   = floor($number / 1000);
+			$remainder   = $number % 1000;
+			$string = convertNumberToWords($thousands) . ' ' . $dictionary[1000];
+			if ($remainder) {
+				$string .= $separator . convertNumberToWords($remainder);
+			}
+			break;
+		case $number < 10000000:
+			$lakh   = floor($number / 100000);
+			$remainder   = $number % 100000;
+			$string = convertNumberToWords($lakh) . ' ' . $dictionary[100000];
+			if ($remainder) {
+				$string .= $separator . convertNumberToWords($remainder);
+			}
+			break;
+		default:
+			$crore   = floor($number / 10000000);
+			$remainder   = $number % 10000000;
+			$string = convertNumberToWords($crore) . ' ' . $dictionary[10000000];
+			if ($remainder) {
+				$string .= $separator . convertNumberToWords($remainder);
+			}
+			break;
+	}
+
+	if (null !== $fraction && is_numeric($fraction)) {
+		$string .= $decimal;
+		$words = array();
+		foreach (str_split((string) $fraction) as $number) {
+			$words[] = $dictionary[$number];
+		}
+		$string .= implode(' ', $words);
+	}
+
+	return $string;
 }
